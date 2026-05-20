@@ -29,7 +29,7 @@ services:
       COMFYUI_PORT: "${COMFYUI_PORT:-8188}"
       # Optimized for Grace-Blackwell unified memory architecture
       # Key insight: DON'T use --gpu-only - let the unified memory fabric work naturally
-      COMFYUI_FLAGS: "${COMFYUI_FLAGS:---listen 0.0.0.0 --port 8188 --disable-pinned-memory --force-fp16 --fp16-unet --fp16-vae --fp16-text-enc --dont-upcast-attention}"
+      COMFYUI_FLAGS: "${COMFYUI_FLAGS:---listen 0.0.0.0 --port 8188 --disable-pinned-memory --dont-upcast-attention}"
       NVIDIA_VISIBLE_DEVICES: "all"
       NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
 
@@ -39,7 +39,9 @@ services:
 
       # Grace-Blackwell unified memory optimizations
       CUDA_CACHE_DISABLE: "1"
-      PYTORCH_NO_CUDA_MEMORY_CACHING: "1"
+      # PYTORCH_NO_CUDA_MEMORY_CACHING removed — our model_management patch handles
+      # caching properly by skipping empty_cache() on unified memory instead of disabling
+      # PyTorch's allocator entirely. Keeping caching ON reduces allocation overhead.
       CUDA_DEVICE_MAX_CONNECTIONS: "1"
       CUDA_DEVICE_MAX_COPY_CONNECTIONS: "4"
       CUDA_MODULE_LOADING: "EAGER"
@@ -62,6 +64,10 @@ services:
 
       # Wheel cache (optional - for prebuilt wheels)
       - ${SPARKYUI_DATA_PATH}/wheels:/opt/wheels
+
+      # Sparky patches - Grace-Blackwell unified memory optimizations
+      # This overrides ComfyUI's model_management.py with our patched version
+      - ./patches/model_management.py:/opt/ComfyUI/comfy/model_management.py:ro
 
     networks:
       - sparky_net
