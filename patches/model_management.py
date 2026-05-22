@@ -507,13 +507,22 @@ def _is_unified_memory():
 UNIFIED_MEMORY = _is_unified_memory()
 
 if UNIFIED_MEMORY:
-    # On unified memory, offloading to CPU is pointless (same physical chips)
-    # HIGH_VRAM keeps everything on GPU and skips the offload/onload cycle
+    # On unified memory, NORMAL_VRAM allows ComfyUI to offload unused model
+    # layers to CPU when memory is tight. Since CPU and GPU share the same
+    # physical RAM on GB10, offloaded layers stay in the same physical pool
+    # but through a different allocator. Per-layer partial loading (LowVramPatch)
+    # means only individual layers are copied on-demand, not whole models,
+    # keeping peak memory manageable.
+    # HIGH_VRAM is available via --highvram if everything fits in VRAM.
     if not (args.highvram or args.gpu_only):
         logging.info("[Sparky] Grace-Blackwell unified memory detected — "
-                      "setting HIGH_VRAM mode (no CPU offloading)")
-    vram_state = VRAMState.HIGH_VRAM
-    logging.info(f"[Sparky] Set vram state to: {vram_state.name} (unified memory override)")
+                      "keeping NORMAL_VRAM mode (allows layer offloading)")
+    else:
+        logging.info("[Sparky] Grace-Blackwell unified memory detected — "
+                      "HIGH_VRAM requested via --highvram")
+    # Don't override vram_state — let ComfyUI's default NORMAL_VRAM handle
+    # offloading. User can force HIGH_VRAM with --highvram if models fit.
+    logging.info(f"[Sparky] Set vram state to: {vram_state.name} (unified memory)")
 else:
     logging.info(f"Set vram state to: {vram_state.name}")
 
@@ -1054,7 +1063,7 @@ def unet_manual_cast(weight_dtype, inference_device, supported_dtypes=[torch.flo
     return torch.float32
 
 def text_encoder_offload_device():
-    if args.gpu_only or UNIFIED_MEMORY:
+    if args.gpu_only:
         return get_torch_device()
     else:
         return torch.device("cpu")
@@ -1123,7 +1132,7 @@ def vae_device():
     return get_torch_device()
 
 def vae_offload_device():
-    if args.gpu_only or UNIFIED_MEMORY:
+    if args.gpu_only:
         return get_torch_device()
     else:
         return torch.device("cpu")

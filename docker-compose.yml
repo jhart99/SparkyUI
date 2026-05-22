@@ -37,17 +37,17 @@ services:
       TORCH_COMPILE_DISABLE: "1"
       TORCHDYNAMO_DISABLE: "1"
 
-      # Grace-Blackwell unified memory optimizations
-      CUDA_CACHE_DISABLE: "1"
-      # PYTORCH_NO_CUDA_MEMORY_CACHING removed — our model_management patch handles
-      # caching properly by skipping empty_cache() on unified memory instead of disabling
-      # PyTorch's allocator entirely. Keeping caching ON reduces allocation overhead.
-      CUDA_DEVICE_MAX_CONNECTIONS: "1"
-      CUDA_DEVICE_MAX_COPY_CONNECTIONS: "4"
-      CUDA_MODULE_LOADING: "EAGER"
-      CUDA_MANAGED_FORCE_DEVICE_ALLOC: "1"
-      OMP_NUM_THREADS: "20"
+      # Grace-Blackwell unified memory — removed aggressive CUDA tuning (5/21):
+      # CUDA_CACHE_DISABLE, CUDA_DEVICE_MAX_CONNECTIONS, CUDA_DEVICE_MAX_COPY_CONNECTIONS,
+      # CUDA_MODULE_LOADING=EAGER, CUDA_MANAGED_FORCE_DEVICE_ALLOC, OMP_NUM_THREADS
+      # These were over-tuning. The ComfyUI flags + Sparky patch handle the architecture.
+      # Keeping only CUBLAS_WORKSPACE_CONFIG for determinism.
       CUBLAS_WORKSPACE_CONFIG: ":0:0"
+
+      # CUDA kernel caching — PTX→SASS compilation cache for GB10 (sm_121)
+      # First run compiles kernels, subsequent runs reuse from disk. 3x speedup reported.
+      # 4GB cache covers all typical ComfyUI kernel variants.
+      CUDA_CACHE_MAXSIZE: "4294967296"
 
     volumes:
       # Models from existing ComfyUI install (read-only)
@@ -66,8 +66,12 @@ services:
       - ${SPARKYUI_DATA_PATH}/wheels:/opt/wheels
 
       # Sparky patches - Grace-Blackwell unified memory optimizations
-      # This overrides ComfyUI's model_management.py with our patched version
+      # model_management.py: HIGH_VRAM→NORMAL_VRAM, intermediate_device()→cuda, soft_empty_cache skip,
+      #   95% vram_for_weights, UNIFIED_MEMORY detection, offload devices → cuda
+      # utils.py: copy=False on tensor.to(device) — avoids double-allocation on unified memory
+      #   where CPU and GPU share the same physical RAM (ComfyUI issue #10896)
       - ./patches/model_management.py:/opt/ComfyUI/comfy/model_management.py:ro
+      - ./patches/utils.py:/opt/ComfyUI/comfy/utils.py:ro
 
     networks:
       - sparky_net
