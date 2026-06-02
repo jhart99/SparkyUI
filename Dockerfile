@@ -25,7 +25,7 @@ ENV PATH="$VENV/bin:$PATH"
 
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu132 \
-        torch torchvision torchaudio && \
+        torch torchvision && \
     pip install --no-cache-dir -r /opt/ComfyUI/requirements.txt
 
 # ---- SageAttention ----
