@@ -3,6 +3,7 @@ custom_nodes/
 output/
 input/
 workflows/
+k8s/
 
 # Git
 .git/

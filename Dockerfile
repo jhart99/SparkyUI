@@ -58,7 +58,9 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install ComfyUI
-ADD https://github.com/comfyanonymous/ComfyUI.git#${COMFYUI_TAG} /opt/ComfyUI/
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git /opt/ComfyUI && \
+    cd /opt/ComfyUI && \
+    git checkout ${COMFYUI_TAG} || true
 
 # Expose ComfyUI
 EXPOSE 8188
