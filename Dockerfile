@@ -10,7 +10,7 @@ ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
 ENV VENV=/opt/venv
 
-ADD https://github.com/comfyanonymous/ComfyUI.git#${COMFYUI_TAG}:requirements.txt /opt/ComfyUI/
+ADD https://github.com/Comfy-Org/ComfyUI.git#${COMFYUI_TAG}:requirements.txt /opt/ComfyUI/requirements.txt
 
 # Base system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
