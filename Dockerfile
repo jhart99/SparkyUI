@@ -1,7 +1,7 @@
 # CUDA 13.0 for Blackwell GB10 (sm_121 / compute_121)
 # CUDA 12.8 only supports up to sm_120, but GB10 is sm_121.
 # "devel" includes nvcc so we can compile CUDA extensions like SageAttention.
-FROM nvcr.io/nvidia/cuda:13.2.1-cudnn-devel-ubuntu24.04 AS builder
+FROM nvcr.io/nvidia/cuda:13.0.3-devel-ubuntu24.04 AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG COMFYUI_TAG=v0.23.0
@@ -12,7 +12,6 @@ ENV VENV=/opt/venv
 
 ADD https://raw.githubusercontent.com/Comfy-Org/ComfyUI/refs/tags/v0.23.0/requirements.txt /opt/ComfyUI/
 RUN ls -l /opt/ComfyUI
-
 
 # Base system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -26,8 +25,8 @@ RUN python3 -m venv $VENV
 ENV PATH="$VENV/bin:$PATH"
 
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
-    pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu132 \
-        torch torchvision && \
+    pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu130 \
+        torch torchvision torchaudio && \
     pip install --no-cache-dir -r /opt/ComfyUI/requirements.txt
 
 # ---- SageAttention ----
@@ -39,7 +38,7 @@ RUN CMAKE_BUILD_PARALLEL_LEVEL=8 MAKEFLAGS="-j8" pip install --no-cache-dir --no
         "git+https://github.com/thu-ml/SageAttention@${SAGEATTN_REF}" || true
 
 
-FROM nvcr.io/nvidia/cuda:13.2.1-cudnn-runtime-ubuntu24.04 AS runner
+FROM nvcr.io/nvidia/cuda:13.0.3-runtime-ubuntu24.04 AS runner
 ARG COMFYUI_TAG=v0.23.0
 ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
@@ -47,8 +46,7 @@ ENV CUDA_HOME=/usr/local/cuda
 # Base system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git curl ca-certificates \
-    python3 python3-pip python3-venv python3-dev \
-    build-essential ninja-build cmake pkg-config \
+    python3 python3-pip python3-venv  \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the pre-built virtual environment from the builder stage
