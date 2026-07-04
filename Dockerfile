@@ -1,7 +1,7 @@
 # CUDA 13.0 for Blackwell GB10 (sm_121 / compute_121)
 # CUDA 12.8 only supports up to sm_120, but GB10 is sm_121.
 # "devel" includes nvcc so we can compile CUDA extensions like SageAttention.
-FROM nvcr.io/nvidia/cuda:13.0.3-devel-ubuntu24.04 AS builder
+FROM nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu24.04 AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG COMFYUI_TAG=v0.23.0
@@ -38,7 +38,7 @@ RUN CMAKE_BUILD_PARALLEL_LEVEL=8 MAKEFLAGS="-j8" pip install --no-cache-dir --no
         "git+https://github.com/thu-ml/SageAttention@${SAGEATTN_REF}" || true
 
 
-FROM nvcr.io/nvidia/cuda:13.0.3-runtime-ubuntu24.04 AS runner
+FROM nvcr.io/nvidia/cuda:13.3.0-runtime-ubuntu24.04 AS runner
 ARG COMFYUI_TAG=v0.23.0
 ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
