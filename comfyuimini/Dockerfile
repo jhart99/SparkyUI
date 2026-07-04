@@ -1,6 +1,6 @@
 # ComfyUIMini - Mobile-friendly UI for ComfyUI
 # Lightweight Node.js container that proxies to ComfyUI
-FROM node:20-alpine
+FROM node:26-alpine
 
 LABEL maintainer="SparkyUI"
 LABEL description="ComfyUIMini mobile UI for ComfyUI on DGX Spark"
