@@ -10,7 +10,7 @@ ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
 ENV VENV=/opt/venv
 
-ADD https://raw.githubusercontent.com/Comfy-Org/ComfyUI/refs/tags/v0.23.0/requirements.txt /opt/ComfyUI/
+ADD https://raw.githubusercontent.com/Comfy-Org/ComfyUI/refs/tags/v0.29.2/requirements.txt /opt/ComfyUI/
 RUN ls -l /opt/ComfyUI
 
 # Base system deps
@@ -39,7 +39,7 @@ RUN CMAKE_BUILD_PARALLEL_LEVEL=8 MAKEFLAGS="-j8" pip install --no-cache-dir --no
 
 
 FROM nvcr.io/nvidia/cuda:13.3.1-runtime-ubuntu24.04 AS runner
-ARG COMFYUI_TAG=v0.23.0
+ARG COMFYUI_TAG=v0.29.2
 ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
 
