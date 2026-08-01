@@ -4,7 +4,7 @@
 FROM nvcr.io/nvidia/cuda:13.3.1-devel-ubuntu24.04 AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG COMFYUI_TAG=v0.23.0
+ARG COMFYUI_TAG=v0.29.2
 ARG SAGEATTN_REF=main
 ENV TORCH_CUDA_ARCH_LIST="12.1"
 ENV CUDA_HOME=/usr/local/cuda
